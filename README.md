@@ -4,7 +4,7 @@
 
 [![Python 3.13+](https://img.shields.io/badge/Python-3.13%2B-blue.svg)](#prerequisites)
 [![Streamlit](https://img.shields.io/badge/Frontend-Streamlit-FF4B4B.svg)](#tech-stack)
-[![Azure OpenAI](https://img.shields.io/badge/LLM-Azure%20OpenAI-0078D4.svg)](#azure-openai-setup)
+[![Anthropic Claude](https://img.shields.io/badge/LLM-Anthropic%20Claude-6B46C1.svg)](#anthropic-api-setup)
 [![LangGraph](https://img.shields.io/badge/Pipeline-LangGraph-4CAF50.svg)](#pipeline-architecture)
 
 ---
@@ -58,7 +58,7 @@ Students spend weeks manually writing and formatting 50–250 page project docum
 | **Diagram Placeholders** | Bordered boxes where the user can insert their own diagrams |
 | **Code Blocks** | Formatted in Consolas font with gray background in a bordered table cell |
 | **Live Debug Console** | Real-time log output during generation showing every pipeline step |
-| **Cost Tracking** | Estimates USD cost based on token usage (GPT-4o pricing model) |
+| **Cost Tracking** | Estimates USD cost based on token usage (Anthropic pricing model) |
 | **Test Mode** | One-click toggle fills all form fields with sample data for quick testing |
 | **Job History** | Sidebar shows the 5 most recent generation jobs with status |
 
@@ -76,22 +76,22 @@ Students spend weeks manually writing and formatting 50–250 page project docum
 | **Streamlit** | 1.41.1 | Web UI framework — form inputs, progress bars, download buttons |
 | **LangGraph** | 0.2.68 | State machine pipeline orchestration — defines the 7-node document generation graph |
 | **LangChain** | 0.3.17 | LLM abstraction layer — message formatting, async invocation |
-| **langchain-openai** | 0.3.0 | Azure OpenAI integration via `AzureChatOpenAI` |
-| **langchain-core** | ≥0.3.29, <0.4.0 | Core primitives: `HumanMessage`, `SystemMessage` |
-| **Azure OpenAI** | API `2024-12-01-preview` | LLM service — model: `gpt-4.1-mini` |
+| **langchain-anthropic** | 0.3.22 | Anthropic Claude integration via `ChatAnthropic` |
+| **langchain-core** | 0.3.83 | Core primitives: `HumanMessage`, `SystemMessage` |
+| **Anthropic Claude** | claude-sonnet-4-6 / claude-haiku-4-5-20251001 | LLM service — dual-model strategy: Sonnet for planning, Haiku for generation |
 | **python-docx** | 1.1.2 | Word document generation and formatting |
 | **tiktoken** | 0.8.0 | Token counting for cost estimation |
 | **nest_asyncio** | 1.6.0 | Allows `asyncio.run()` inside Streamlit's running event loop |
 | **pydantic** | 2.10.6 | Data validation (used by LangChain internally) |
 | **aiofiles** | 24.1.0 | Async file operations (LangGraph dependency) |
-| **python-dotenv** | 1.0.1 | Loads `.env` file for API keys and endpoint configuration |
+| **python-dotenv** | 1.0.1 | Loads `.env` file for API keys and model configuration |
 | **langgraph-checkpoint** | 2.1.2 | LangGraph state checkpointing (dependency) |
 
 ### External Services
 
 | Service | Details |
 |---------|---------|
-| **Azure OpenAI** | Endpoint: configured via `AZURE_OPENAI_ENDPOINT` env var. Deployment: `gpt-4.1-mini`. API version: `2024-12-01-preview`. |
+| **Anthropic Claude API** | API key configured via `ANTHROPIC_API_KEY` env var. Planner model: `claude-sonnet-4-6`. Generator model: `claude-haiku-4-5-20251001`. Both overridable via `.env`. |
 
 ---
 
@@ -123,7 +123,7 @@ Students spend weeks manually writing and formatting 50–250 page project docum
         │                   │                   │
    ┌────▼───────────────────▼───────────────────▼─────┐
    │               LLM Client (llm_client.py)         │
-   │     sync / async / batch calls → Azure OpenAI    │
+   │     sync / async / batch calls → Anthropic API   │
    └──────────────────────┬───────────────────────────┘
                           │
                 ┌─────────▼─────────┐
@@ -147,11 +147,11 @@ START → analyze_input → plan_document → generate_front_matter → generate
 | # | Node | What It Does | LLM Calls | Progress % |
 |---|------|-------------|-----------|------------|
 | 1 | `analyze_input` | Validates user inputs, logs metadata (word counts, code length) to tracker. No LLM calls. | 0 | 10% |
-| 2 | `plan_document` | Sends project info to the LLM with a detailed system prompt. The LLM returns a JSON document plan with chapters, sections, page allocations, word targets, and content strategy (`elaborate` / `summarize` / `balanced`). | 1 | 25% |
-| 3 | `generate_front_matter` | Generates the **Abstract** (250–300 words) and **Acknowledgment** (200–250 words) using two separate LLM calls. | 2 | 35% |
-| 4 | `generate_chapters` | Generates **all chapters in parallel** using `batch_call_llm` with a concurrency semaphore of 12. Each chapter gets its own LLM call with specific word targets and section descriptions. | N (one per chapter) | 70% |
-| 5 | `calibrate_content` | Checks every chapter's actual word count against its target. Chapters deviating >20% are re-generated with expand/condense instructions. | 0 to N | 80% |
-| 6 | `generate_references` | Generates 15–25 IEEE-format references relevant to the project's tech stack. | 1 | 85% |
+| 2 | `plan_document` | Sends project info to the LLM (`PLANNER_MODEL` — claude-sonnet-4-6) with a detailed system prompt. The LLM returns a JSON document plan with chapters, sections, page allocations, word targets, and content strategy (`elaborate` / `summarize` / `balanced`). Uses dynamic `max_tokens` with a 2.0× buffer. | 1 | 25% |
+| 3 | `generate_front_matter` | Generates the **Abstract** (250–300 words) and **Acknowledgment** (200–250 words) using two separate LLM calls via `GENERATOR_MODEL` (claude-haiku-4-5-20251001). | 2 | 35% |
+| 4 | `generate_chapters` | Generates **all chapters in parallel** using `batch_call_llm` with a concurrency semaphore of 12. Each chapter uses `GENERATOR_MODEL` with dynamic `max_tokens` (1.5× buffer). | N (one per chapter) | 70% |
+| 5 | `calibrate_content` | Checks every chapter's actual word count against its target. Chapters deviating >20% are re-generated via `GENERATOR_MODEL` with dynamic `max_tokens` (1.5× buffer) and expand/condense instructions. | 0 to N | 80% |
+| 6 | `generate_references` | Generates 15–25 IEEE-format references relevant to the project's tech stack using `PLANNER_MODEL` (claude-sonnet-4-6). | 1 | 85% |
 | 7 | `format_document` | Assembles everything into a `.docx` file using `python-docx`: title page, certificate, acknowledgment, abstract, TOC, list of figures/tables, all chapters (parsed from markdown), references, appendix (source code), and page numbers. | 0 | 100% |
 
 ### Pipeline State (`PipelineState`)
@@ -208,24 +208,25 @@ class PipelineState(TypedDict):
 **Purpose:** Central configuration module. Loads environment variables from `.env` and defines all app-wide constants used by every other module.
 
 **Key Responsibilities:**
-- Loads Azure OpenAI credentials from environment variables
+- Loads Anthropic API credentials and model names from environment variables
 - Defines document formatting constants (fonts, sizes, spacing)
 - Sets token limits and batch concurrency
+- Provides `calculate_max_tokens()` for dynamic per-call token budgets
 - Creates output and tracking directories
 
 **Constants Reference:**
 
 | Constant | Value | Description |
 |----------|-------|-------------|
-| `AZURE_OPENAI_API_KEY` | From `.env` | Azure OpenAI API key |
-| `AZURE_OPENAI_ENDPOINT` | From `.env` | Azure OpenAI endpoint URL |
-| `AZURE_OPENAI_VERSION` | `2024-12-01-preview` | Azure API version |
-| `AZURE_DEPLOYMENT_NAME` | `gpt-4.1-mini` | Azure deployment name (model) |
+| `ANTHROPIC_API_KEY` | From `.env` | Anthropic API key |
+| `PLANNER_MODEL` | `claude-sonnet-4-6` (overridable via `ANTHROPIC_PLANNER_MODEL` in `.env`) | Model used for document planning and IEEE references |
+| `GENERATOR_MODEL` | `claude-haiku-4-5-20251001` (overridable via `ANTHROPIC_GENERATOR_MODEL` in `.env`) | Model used for front matter, all chapters, and calibration |
 | `MAX_PAGES` | `250` | Maximum allowed pages |
 | `MIN_PAGES` | `10` | Minimum allowed pages |
 | `WORDS_PER_PAGE` | `300` | Approximate words per A4 page |
 | `LINES_PER_PAGE` | `30` | Lines per page estimate |
-| `MAX_OUTPUT_TOKENS_PER_CALL` | `4096` | Max output tokens per LLM call |
+| `DEFAULT_MAX_OUTPUT_TOKENS` | `4096` | Default max tokens when no word target is given |
+| `MAX_OUTPUT_TOKENS_PER_CALL` | `8096` | Hard cap per LLM call |
 | `MAX_INPUT_TOKENS_PER_CALL` | `128000` | Max input context window |
 | `BATCH_CONCURRENCY` | `12` | Number of parallel LLM calls |
 | `DEFAULT_FONT` | `Times New Roman` | Body text font |
@@ -239,6 +240,17 @@ class PipelineState(TypedDict):
 | `PAGE_MARGIN_INCHES` | `1.0` | Top, bottom, right margins |
 | `OUTPUT_DIR` | `./output/` | Where generated .docx files are saved |
 | `TRACKING_DIR` | `./tracking/` | Where JSON tracking files are saved |
+
+**`calculate_max_tokens(word_target, buffer_multiplier, default)` — Dynamic Token Budget:**
+
+```python
+def calculate_max_tokens(word_target: int = 0, buffer_multiplier: float = 1.5, default: int = DEFAULT_MAX_OUTPUT_TOKENS) -> int:
+```
+
+- Formula: `tokens_needed = word_target × 1.33 × buffer_multiplier`
+- Clamped between `DEFAULT_MAX_OUTPUT_TOKENS` (4096) and `MAX_OUTPUT_TOKENS_PER_CALL` (8096)
+- Planner uses `buffer_multiplier=2.0`; chapters and calibration use `buffer_multiplier=1.5` (default)
+- Returns `default` (4096) when `word_target <= 0`
 
 **Imported by:** Every other module (`llm_client.py`, `tracker.py`, `planner.py`, `content_generator.py`, `doc_formatter.py`, `app.py`).
 
@@ -298,40 +310,41 @@ class PipelineState(TypedDict):
 **Cost Estimation Formula:**
 - Input tokens: `$2.50 / 1M tokens`
 - Output tokens: `$10.00 / 1M tokens`
-- Based on GPT-4o pricing (used as approximation)
+- Used as an approximation; see Section 9 for Anthropic-specific pricing.
 
 ---
 
-### 4.3 `llm_client.py` — Azure OpenAI LLM Client
+### 4.3 `llm_client.py` — Anthropic Claude LLM Client
 
-**Purpose:** Provides synchronous, asynchronous, and batch-parallel interfaces for calling Azure OpenAI, with automatic token counting.
+**Purpose:** Provides synchronous, asynchronous, and batch-parallel interfaces for calling Anthropic Claude, with automatic token counting.
 
 **Functions:**
 
 | Function | Signature | Description |
 |----------|-----------|-------------|
-| `get_llm` | `(temperature=0.7, max_tokens=4096) -> AzureChatOpenAI` | Creates and returns a configured `AzureChatOpenAI` instance with the deployment, API key, endpoint, and version from `config.py` |
-| `count_tokens` | `(text: str, model="gpt-4.1-mini") -> int` | Counts tokens using `tiktoken`. Falls back to `cl100k_base` encoding if the model is not recognized |
-| `call_llm` | `(system_prompt, user_prompt, temperature=0.7, max_tokens=4096) -> dict` | **Synchronous** LLM call. Returns `{content, input_tokens, output_tokens}` |
-| `call_llm_async` | `(system_prompt, user_prompt, temperature=0.7, max_tokens=4096) -> dict` | **Asynchronous** LLM call using `llm.ainvoke()`. Same return format |
-| `batch_call_llm` | `(calls: list[dict], concurrency=5) -> list[dict]` | Runs multiple async LLM calls in parallel, gated by an `asyncio.Semaphore(concurrency)`. Each item in `calls` is `{system_prompt, user_prompt, temperature?, max_tokens?}`. Errors are caught per-call and returned as `{content: "ERROR: ...", error: "..."}` |
+| `get_llm` | `(temperature=0.7, max_tokens=DEFAULT_MAX_OUTPUT_TOKENS, model=None) -> ChatAnthropic` | Creates and returns a configured `ChatAnthropic` instance. Uses `GENERATOR_MODEL` when `model` is `None`. API key and model are sourced from `config.py`. |
+| `count_tokens` | `(text: str, model="gpt-4o") -> int` | Counts tokens using `tiktoken`. Falls back to `cl100k_base` encoding if the model is not recognized |
+| `call_llm` | `(system_prompt, user_prompt, temperature=0.7, max_tokens=DEFAULT_MAX_OUTPUT_TOKENS, model=None) -> dict` | **Synchronous** LLM call. Returns `{content, input_tokens, output_tokens}`. Pass `model=PLANNER_MODEL` to use Sonnet. |
+| `call_llm_async` | `(system_prompt, user_prompt, temperature=0.7, max_tokens=DEFAULT_MAX_OUTPUT_TOKENS, model=None) -> dict` | **Asynchronous** LLM call using `llm.ainvoke()`. Same return format |
+| `batch_call_llm` | `(calls: list[dict], concurrency=5) -> list[dict]` | Runs multiple async LLM calls in parallel, gated by an `asyncio.Semaphore(concurrency)`. Each item in `calls` is `{system_prompt, user_prompt, temperature?, max_tokens?, model?}`. Errors are caught per-call and returned as `{content: "ERROR: ...", error: "..."}` |
 
 **Key Implementation Details:**
 - `batch_call_llm` uses `asyncio.gather(*tasks, return_exceptions=True)` so one failed call doesn't abort the entire batch.
-- The `AzureChatOpenAI` instance is created fresh for each call (stateless).
-- Token counting uses `tiktoken.encoding_for_model("gpt-4.1-mini")` with a `cl100k_base` fallback.
+- The `ChatAnthropic` instance is created fresh for each call (stateless).
+- The `model` parameter in all functions defaults to `None`, which resolves to `GENERATOR_MODEL` inside `get_llm()`. Callers that need the planner model explicitly pass `model=PLANNER_MODEL`.
+- Token counting uses `tiktoken.encoding_for_model("gpt-4o")` with a `cl100k_base` fallback (used as an approximation for Anthropic models).
 
 ---
 
 ### 4.4 `planner.py` — Document Planner
 
-**Purpose:** Takes user inputs and uses the LLM to create a structured JSON document plan — the blueprint that drives all subsequent content generation.
+**Purpose:** Takes user inputs and uses the LLM (`PLANNER_MODEL` — claude-sonnet-4-6) to create a structured JSON document plan — the blueprint that drives all subsequent content generation. Uses `calculate_max_tokens()` with a 2.0× buffer to ensure the full plan JSON fits in a single response.
 
 **Function:**
 
 | Function | Signature | Description |
 |----------|-----------|-------------|
-| `create_document_plan` | `(project_title, project_summary, project_code, tech_stack, target_pages, college_format, additional_info, tracker) -> dict` | Sends a detailed prompt to the LLM requesting a JSON document plan. Parses the response, strips code fences if present, and returns the plan dict |
+| `create_document_plan` | `(project_title, project_summary, project_code, tech_stack, target_pages, college_format, additional_info, tracker) -> dict` | Sends a detailed prompt to the LLM requesting a JSON document plan. Uses regex-based code fence stripping (handles ` ```json `, ` ```JSON `, ` ``` `, and surrounding text) and then falls back to a `{...}` regex extraction before `json.loads()`. Returns the plan dict. |
 
 **System Prompt Rules** (from `PLANNER_SYSTEM_PROMPT`):
 1. Total pages must equal the user's requested page count
@@ -393,15 +406,15 @@ class PipelineState(TypedDict):
 
 ### 4.5 `content_generator.py` — Chapter & Front Matter Generator
 
-**Purpose:** Generates all chapter content in parallel using batch LLM calls, generates front matter (abstract & acknowledgment), and calibrates content to hit word targets.
+**Purpose:** Generates all chapter content in parallel using batch LLM calls, generates front matter (abstract & acknowledgment), and calibrates content to hit word targets. All LLM calls in this module use `GENERATOR_MODEL` (claude-haiku-4-5-20251001) with dynamic `max_tokens` calculated via `calculate_max_tokens()`.
 
 **Functions:**
 
 | Function | Signature | Description |
 |----------|-----------|-------------|
-| `generate_front_matter` | `(section_type, project_title, project_summary, student_name, college_name, guide_name, department, year, tracker) -> dict` | Generates either `abstract` (250–300 words) or `acknowledgment` (200–250 words). Returns `{type, content}` |
-| `generate_all_chapters` | `async (plan, project_summary, project_code, tech_stack, additional_info, tracker) -> list[dict]` | Generates all chapters in parallel using `batch_call_llm`. Each chapter gets a custom user prompt with its sections, word target, and code snippets. Returns list of `{chapter_number, title, content, word_count, target_words, sections}` |
-| `calibrate_content` | `async (chapters, plan, tracker) -> list[dict]` | Checks each chapter's word count vs target. If deviation >20%, re-generates with expand/condense instructions. Returns the updated chapters list |
+| `generate_front_matter` | `(section_type, project_title, project_summary, student_name, college_name, guide_name, department, year, tracker) -> dict` | Generates either `abstract` (250–300 words) or `acknowledgment` (200–250 words) using `GENERATOR_MODEL`. Returns `{type, content}` |
+| `generate_all_chapters` | `async (plan, project_summary, project_code, tech_stack, additional_info, tracker) -> list[dict]` | Generates all chapters in parallel using `batch_call_llm`. Each chapter uses `GENERATOR_MODEL` with `calculate_max_tokens(chapter["word_target"])` (1.5× buffer). Returns list of `{chapter_number, title, content, word_count, target_words, sections}` |
+| `calibrate_content` | `async (chapters, plan, tracker) -> list[dict]` | Checks each chapter's word count vs target. If deviation >20%, re-generates with `GENERATOR_MODEL` and `calculate_max_tokens(target)` (1.5× buffer) using expand/condense instructions. Returns the updated chapters list |
 
 **System Prompts:**
 
@@ -484,7 +497,7 @@ This method processes LLM-generated markdown-like content line by line and conve
 
 ### 4.7 `pipeline.py` — LangGraph Pipeline Orchestrator
 
-**Purpose:** Defines the LangGraph `StateGraph` with 7 nodes, manages the global tracker registry, and provides the main `run_pipeline()` entry point that the UI calls.
+**Purpose:** Defines the LangGraph `StateGraph` with 7 nodes, manages the global tracker registry, and provides the main `run_pipeline()` entry point that the UI calls. Imports both `PLANNER_MODEL` and `GENERATOR_MODEL` from `config.py` to log which model is being used at each stage.
 
 **Key Components:**
 
@@ -507,6 +520,11 @@ def get_tracker(job_id: str) -> ProcessTracker:
 This registry is also accessed by `app.py` to poll live logs from the background thread.
 
 **Node Functions:** Each node function takes a `PipelineState` dict and returns a partial dict that LangGraph merges into the state. See [Pipeline Nodes — Detailed Breakdown](#pipeline-nodes--detailed-breakdown) above for the complete table.
+
+Notable model usage per node:
+- `plan_document_node` — logs `PLANNER_MODEL` and calls `create_document_plan()` (uses Sonnet)
+- `generate_chapters_node` — logs `GENERATOR_MODEL` (Haiku) for batch chapter generation
+- `generate_references_node` — explicitly passes `model=PLANNER_MODEL` (Sonnet) to `call_llm()`
 
 **Graph Construction — `build_pipeline()`:**
 ```python
@@ -624,7 +642,7 @@ The toggle `🧪 Auto-fill Test Data` in the sidebar conditionally populates eve
 **Purpose:** Validates that all 13 required imports work correctly. Not a unit test suite — it's a setup verification script.
 
 **Tests (13 total):**
-1. `config` — `AZURE_OPENAI_ENDPOINT, OUTPUT_DIR, TRACKING_DIR`
+1. `config` — `ANTHROPIC_API_KEY, OUTPUT_DIR, TRACKING_DIR`
 2. `tracker` — `ProcessTracker`
 3. `llm_client` — `get_llm, call_llm, count_tokens, batch_call_llm`
 4. `planner` — `create_document_plan`
@@ -635,7 +653,7 @@ The toggle `🧪 Auto-fill Test Data` in the sidebar conditionally populates eve
 9. `streamlit` — `streamlit`
 10. `tiktoken` — `tiktoken`
 11. `langgraph` — `StateGraph, START, END`
-12. `langchain-openai` — `AzureChatOpenAI`
+12. `langchain-anthropic` — `ChatAnthropic`
 13. `langchain-core` — `HumanMessage, SystemMessage`
 
 **Run:** `python test_project.py`
@@ -646,11 +664,11 @@ The toggle `🧪 Auto-fill Test Data` in the sidebar conditionally populates eve
 
 ```
 langchain==0.3.17
-langchain-openai==0.3.0
+langchain-anthropic==0.3.22
+langchain-core==0.3.83
 langgraph==0.2.68
-python-dotenv==1.0.1
-langchain-core>=0.3.29,<0.4.0
 langgraph-checkpoint==2.1.2
+python-dotenv==1.0.1
 python-docx==1.1.2
 streamlit==1.41.1
 aiofiles==24.1.0
@@ -659,7 +677,7 @@ tiktoken==0.8.0
 nest_asyncio==1.6.0
 ```
 
-**Note:** `langchain-core` uses a range (`>=0.3.29,<0.4.0`) because `langchain==0.3.17` requires `>=0.3.33` internally, so pinning to an exact lower version would cause a conflict.
+**Note:** `langchain-core` is pinned to `0.3.83` (exact version) to ensure compatibility with `langchain==0.3.17` and `langchain-anthropic==0.3.22`. `langchain-openai` has been removed and replaced with `langchain-anthropic`.
 
 ---
 
@@ -671,10 +689,18 @@ nest_asyncio==1.6.0
 
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
-| `OPENAI_API_KEY` | Yes | — | Azure OpenAI API key |
-| `AZURE_OPENAI_ENDPOINT` | Yes | — | Azure OpenAI endpoint URL (e.g., `https://your-resource.openai.azure.com/`) |
-| `AZURE_OPENAI_VERSION` | No | `2024-12-01-preview` | Azure API version string |
-| `AZURE_DEPLOYMENT_NAME` | No | `gpt-4.1-mini` | Azure model deployment name |
+| `ANTHROPIC_API_KEY` | Yes | — | Anthropic API key (get it from [console.anthropic.com](https://console.anthropic.com)) |
+| `ANTHROPIC_PLANNER_MODEL` | No | `claude-sonnet-4-6` | Model used for document planning and IEEE reference generation. Override to use a different Sonnet variant. |
+| `ANTHROPIC_GENERATOR_MODEL` | No | `claude-haiku-4-5-20251001` | Model used for front matter, all chapter generation, and calibration. Override to use a different Haiku variant. |
+
+### Model Settings
+
+| Role | Default Model | Used For | Override Variable |
+|------|--------------|----------|-------------------|
+| **Planner** | `claude-sonnet-4-6` | Document planning (node 2), IEEE references (node 6) | `ANTHROPIC_PLANNER_MODEL` |
+| **Generator** | `claude-haiku-4-5-20251001` | Front matter (node 3), all chapters (node 4), calibration (node 5) | `ANTHROPIC_GENERATOR_MODEL` |
+
+The planner uses the more capable Sonnet model for structured reasoning (JSON plan generation). The generator uses the faster, cheaper Haiku model for bulk text generation where throughput matters more than complex reasoning.
 
 ### Document Formatting Constants (in `config.py`)
 
@@ -692,8 +718,9 @@ nest_asyncio==1.6.0
 
 | Setting | Value | Notes |
 |---------|-------|-------|
-| `BATCH_CONCURRENCY` | `12` | Parallel LLM calls. Safe range: 5–20 for gpt-4.1-mini (5K RPM default on Azure Global Standard) |
-| `MAX_OUTPUT_TOKENS_PER_CALL` | `4096` | Max tokens per LLM response |
+| `BATCH_CONCURRENCY` | `12` | Parallel LLM calls. Anthropic Claude API supports high concurrency — adjust if hitting rate limits. |
+| `DEFAULT_MAX_OUTPUT_TOKENS` | `4096` | Fallback token budget when no word target is given |
+| `MAX_OUTPUT_TOKENS_PER_CALL` | `8096` | Hard cap per LLM call — `calculate_max_tokens()` never exceeds this |
 | `MAX_INPUT_TOKENS_PER_CALL` | `128000` | Model context window |
 | `MAX_PAGES` | `250` | UI slider upper bound |
 | `MIN_PAGES` | `10` | UI slider lower bound |
@@ -707,7 +734,7 @@ nest_asyncio==1.6.0
 ### Prerequisites
 
 - **Python 3.13+** installed and on your PATH
-- **Azure OpenAI** resource with a deployed model (e.g., `gpt-4.1-mini`)
+- **Anthropic API key** (sign up at [console.anthropic.com](https://console.anthropic.com))
 - **Git** (optional, for cloning)
 
 ### Step 1: Clone or Download
@@ -739,17 +766,19 @@ pip install -r requirements.txt
 Create a `.env` file in the project root:
 
 ```env
-OPENAI_API_KEY=your-azure-openai-api-key-here
-AZURE_OPENAI_ENDPOINT=https://your-resource-name.openai.azure.com/
-AZURE_OPENAI_VERSION=2024-12-01-preview
-AZURE_DEPLOYMENT_NAME=gpt-4.1-mini
+# Required
+ANTHROPIC_API_KEY=your-anthropic-api-key-here
+
+# Optional — override default model selections
+ANTHROPIC_PLANNER_MODEL=claude-sonnet-4-6
+ANTHROPIC_GENERATOR_MODEL=claude-haiku-4-5-20251001
 ```
 
-> **How to find these values:**
-> 1. Go to [Azure Portal](https://portal.azure.com) → your OpenAI resource
-> 2. **Endpoint** → Resource Overview → "Endpoint" field
-> 3. **API Key** → Resource → "Keys and Endpoint" → Key 1 or Key 2
-> 4. **Deployment Name** → Azure AI Studio → Deployments → your model's deployment name
+> **How to get your API key:**
+> 1. Go to [console.anthropic.com](https://console.anthropic.com)
+> 2. Sign in or create an account
+> 3. Navigate to **API Keys** → **Create Key**
+> 4. Copy the key and paste it as `ANTHROPIC_API_KEY` in your `.env` file
 
 ### Step 5: Verify Setup
 
@@ -772,7 +801,7 @@ Python: 3.13.x ...
   ✓ streamlit
   ✓ tiktoken
   ✓ langgraph
-  ✓ langchain-openai
+  ✓ langchain-anthropic
   ✓ langchain-core
 
 ========================================
@@ -827,7 +856,7 @@ During generation, you'll see timestamped logs like:
 [    0.1s]    Project: Smart Attendance System using Face Recognition
 [    0.1s]    Target pages: 60
 [    0.1s] ✅ Input analysis complete
-[    3.2s] 📝 Planning document structure (LLM call)...
+[    3.2s] 📝 Planning document structure (model: claude-sonnet-4-6)...
 [    8.5s] ✅ Document plan created: 8 chapters
 [    8.5s]    Ch 1: Introduction (8 pages, 2400 words)
 [    8.5s]    Ch 2: Literature Review (7 pages, 2100 words)
@@ -879,18 +908,27 @@ The LLM planner typically creates these chapters (varies by project):
 
 ## 9. Cost & Performance
 
-> **Overview:** This section covers token usage, cost estimation, generation speed, and Azure rate limits. Read this if you want to estimate costs, optimize speed, or understand the batch processing limits.
+> **Overview:** This section covers token usage, cost estimation, generation speed, and Anthropic rate limits. Read this if you want to estimate costs, optimize speed, or understand the batch processing limits.
 
 ### Token Usage Estimates
 
 | Document Size | Approx. Input Tokens | Approx. Output Tokens | Estimated Cost* |
 |--------------|----------------------|----------------------|----------------|
-| 30 pages | ~30K | ~20K | ~$0.15–0.30 |
-| 60 pages | ~50K | ~35K | ~$0.30–0.50 |
-| 120 pages | ~80K | ~60K | ~$0.50–0.80 |
-| 250 pages | ~150K | ~120K | ~$1.00–1.50 |
+| 30 pages | ~30K | ~20K | ~$0.03–0.08 |
+| 60 pages | ~50K | ~35K | ~$0.05–0.15 |
+| 120 pages | ~80K | ~60K | ~$0.10–0.25 |
+| 250 pages | ~150K | ~120K | ~$0.20–0.50 |
 
-*Based on GPT-4o pricing model ($2.50/1M input, $10/1M output). Actual gpt-4.1-mini pricing may differ.
+*Most tokens are generated by `GENERATOR_MODEL` (Haiku), with only planning and references using `PLANNER_MODEL` (Sonnet). Costs are approximations based on the pricing below.
+
+### Anthropic Pricing (as of early 2026)
+
+| Model | Input (per 1M tokens) | Output (per 1M tokens) | Used For |
+|-------|----------------------|------------------------|----------|
+| **claude-sonnet-4-6** | ~$3.00 | ~$15.00 | Planning (node 2), References (node 6) |
+| **claude-haiku-4-5-20251001** | ~$0.25 | ~$1.25 | Front matter (node 3), Chapters (node 4), Calibration (node 5) |
+
+Because the vast majority of output tokens come from the Haiku model (chapter generation), the effective cost per document is significantly lower than an all-Sonnet approach.
 
 ### Generation Speed
 
@@ -901,15 +939,9 @@ The LLM planner typically creates these chapters (varies by project):
 | 120 pages | 5–10 minutes | ~4–7 minutes |
 | 250 pages | 8–15 minutes | ~6–10 minutes |
 
-### Azure Rate Limits (gpt-4.1-mini)
+### Anthropic Rate Limits
 
-| Deployment Type | RPM (Requests/Min) | TPM (Tokens/Min) | Safe Concurrency |
-|----------------|---------------------|--------------------|------------------|
-| Global Standard (Default) | 5,000 | 2,000,000 | 12–20 |
-| Standard | 1,000 | 500,000 | 5–10 |
-| Provisioned | Custom | Custom | Depends on PTU |
-
-The current `BATCH_CONCURRENCY = 12` is well within the Global Standard limits.
+Anthropic's API limits vary by tier. The current `BATCH_CONCURRENCY = 12` is appropriate for most standard API tiers. If you encounter `overloaded_error` or `rate_limit_error` responses, reduce `BATCH_CONCURRENCY` in `config.py`.
 
 ### Adjusting Concurrency
 
@@ -955,13 +987,33 @@ After a generation run, check `tracking/doc_YYYYMMDD_HHMMSS.json` for:
 
 > **Overview:** Common errors and their solutions. Read this if you encounter an issue during setup or generation.
 
-### `DeploymentNotFound` Error
+### `AuthenticationError` — Invalid API Key
 
-**Cause:** The `AZURE_DEPLOYMENT_NAME` in your `.env` doesn't match your actual Azure deployment name.
+**Cause:** The `ANTHROPIC_API_KEY` in your `.env` is missing, incorrect, or has expired.
 
-**Fix:** Go to Azure AI Studio → Deployments → copy the exact deployment name → update `.env`:
+**Fix:** Get a valid key from [console.anthropic.com](https://console.anthropic.com) → API Keys, then update `.env`:
 ```env
-AZURE_DEPLOYMENT_NAME=your-exact-deployment-name
+ANTHROPIC_API_KEY=sk-ant-...
+```
+
+### `NotFoundError` — Model Not Found
+
+**Cause:** The model name in `ANTHROPIC_PLANNER_MODEL` or `ANTHROPIC_GENERATOR_MODEL` does not exist or is not available on your account.
+
+**Fix:** Remove the override from `.env` to use the tested defaults, or check [Anthropic's model documentation](https://docs.anthropic.com/en/docs/about-claude/models) for the correct model ID:
+```env
+# Remove these lines or correct the model IDs:
+ANTHROPIC_PLANNER_MODEL=claude-sonnet-4-6
+ANTHROPIC_GENERATOR_MODEL=claude-haiku-4-5-20251001
+```
+
+### `OverloadedError` or Rate Limit Errors
+
+**Cause:** Too many parallel requests sent to the Anthropic API simultaneously.
+
+**Fix:** Reduce `BATCH_CONCURRENCY` in `config.py`:
+```python
+BATCH_CONCURRENCY = 5  # Lower value reduces parallel load
 ```
 
 ### `RuntimeError: This event loop is already running`
@@ -975,11 +1027,11 @@ pip install nest_asyncio==1.6.0
 
 ### `langchain-core` Version Conflict
 
-**Cause:** Pinning `langchain-core` to an exact version that conflicts with `langchain`.
+**Cause:** `langchain-core` version conflicts with `langchain` or `langchain-anthropic`.
 
-**Fix:** Use a version range in `requirements.txt`:
+**Fix:** Pin to the tested version in `requirements.txt`:
 ```
-langchain-core>=0.3.29,<0.4.0
+langchain-core==0.3.83
 ```
 
 ### `langgraph-checkpoint==2.1.3` Installation Fails
@@ -994,9 +1046,9 @@ langgraph-checkpoint==2.1.2
 ### Generation Takes Too Long
 
 **Possible causes and fixes:**
-1. **Low concurrency** — Increase `BATCH_CONCURRENCY` in `config.py` (max 20 for Global Standard)
+1. **Low concurrency** — Increase `BATCH_CONCURRENCY` in `config.py` if within rate limits
 2. **High page count** — 250 pages takes 8–15 minutes; start with 30–60 pages for testing
-3. **Network latency** — Ensure low latency to your Azure region
+3. **Network latency** — Ensure good connectivity to Anthropic's API endpoints
 4. **Calibration overhead** — If many chapters miss their word targets, re-generation adds time
 
 ### Empty or Broken `.docx` Output
@@ -1021,15 +1073,15 @@ project-document-agent/
 │
 ├── app.py                  # Streamlit web UI — forms, progress, download
 ├── pipeline.py             # LangGraph 7-node state machine pipeline
-├── planner.py              # LLM-based document structure planner
-├── content_generator.py    # Parallel chapter generation + calibration
+├── planner.py              # LLM-based document structure planner (uses PLANNER_MODEL)
+├── content_generator.py    # Parallel chapter generation + calibration (uses GENERATOR_MODEL)
 ├── doc_formatter.py        # python-docx Word document builder (747 lines)
-├── llm_client.py           # Azure OpenAI sync/async/batch client
+├── llm_client.py           # Anthropic Claude sync/async/batch client
 ├── tracker.py              # Process tracking — tokens, timing, costs, logs
-├── config.py               # All settings, constants, env vars
+├── config.py               # All settings, constants, env vars, calculate_max_tokens()
 ├── test_project.py         # Import verification script (13 checks)
 ├── requirements.txt        # Python dependencies (12 packages)
-├── .env                    # Azure OpenAI credentials (not committed)
+├── .env                    # Anthropic API key and optional model overrides (not committed)
 ├── README.md               # This file
 │
 ├── output/                 # Generated .docx files
@@ -1051,4 +1103,4 @@ This project is intended for educational purposes. Use responsibly.
 
 ---
 
-*Built with Python, Streamlit, LangGraph, LangChain, Azure OpenAI, and python-docx.*
+*Built with Python, Streamlit, LangGraph, LangChain, Anthropic Claude, and python-docx.*
