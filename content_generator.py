@@ -4,7 +4,7 @@ Each chapter is generated independently with its own context and page target.
 """
 import asyncio
 import json
-from config import WORDS_PER_PAGE, BATCH_CONCURRENCY
+from config import WORDS_PER_PAGE, BATCH_CONCURRENCY, calculate_max_tokens, GENERATOR_MODEL
 from llm_client import batch_call_llm, call_llm
 from tracker import ProcessTracker
 
@@ -83,6 +83,7 @@ Include gratitude to guide, HOD, college, family, and friends. Keep it formal an
             user_prompt=user_prompt,
             temperature=0.5,
             max_tokens=1024,
+            model=GENERATOR_MODEL,
         )
         tracker.complete_step(
             step_id,
@@ -158,7 +159,8 @@ Write the complete chapter content now. Remember to hit the target word count of
             "system_prompt": CHAPTER_SYSTEM_PROMPT,
             "user_prompt": user_prompt,
             "temperature": 0.7,
-            "max_tokens": min(4096, chapter["word_target"] * 2),  # rough token estimate
+            "max_tokens": calculate_max_tokens(chapter["word_target"]),
+            "model": GENERATOR_MODEL,
         })
 
     try:
@@ -232,7 +234,8 @@ Maintain the same structure and sections. Keep all headings.
 Return the adjusted content only.""",
                 "user_prompt": chapter["content"],
                 "temperature": 0.5,
-                "max_tokens": min(4096, target * 2),
+                "max_tokens": calculate_max_tokens(target),
+                "model": GENERATOR_MODEL,
                 "chapter_index": idx,
             })
 

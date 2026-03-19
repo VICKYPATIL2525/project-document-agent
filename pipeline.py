@@ -36,7 +36,7 @@ from content_generator import (
     calibrate_content,
 )
 from doc_formatter import DocumentFormatter
-from config import OUTPUT_DIR
+from config import OUTPUT_DIR, PLANNER_MODEL, GENERATOR_MODEL
 
 
 # ─── State Definition ─────────────────────────────────────────────────────────
@@ -117,7 +117,7 @@ def analyze_input_node(state: PipelineState) -> dict:
 def plan_document_node(state: PipelineState) -> dict:
     """Create the document structure plan using LLM."""
     tracker = get_tracker(state["job_id"])
-    tracker.log("📝 Planning document structure (LLM call)...")
+    tracker.log(f"📝 Planning document structure (model: {PLANNER_MODEL})...")
 
     plan = create_document_plan(
         project_title=state["project_title"],
@@ -192,7 +192,7 @@ def generate_chapters_node(state: PipelineState) -> dict:
     """Generate all chapter content in parallel batches."""
     tracker = get_tracker(state["job_id"])
     num_chapters = len(state["document_plan"].get("chapters", []))
-    tracker.log(f"📚 Generating {num_chapters} chapters in parallel batches...")
+    tracker.log(f"📚 Generating {num_chapters} chapters in parallel batches (model: {GENERATOR_MODEL})...")
 
     # Run async content generation
     chapters = asyncio.run(
@@ -242,7 +242,7 @@ def calibrate_content_node(state: PipelineState) -> dict:
 def generate_references_node(state: PipelineState) -> dict:
     """Generate references/bibliography section."""
     tracker = get_tracker(state["job_id"])
-    tracker.log("📚 Generating IEEE references...")
+    tracker.log(f"📚 Generating IEEE references (model: {PLANNER_MODEL})...")
     step_id = tracker.start_step("generate_references", "Generating references section")
 
     from llm_client import call_llm
@@ -261,6 +261,7 @@ Technology Stack: {state['tech_stack']}
 Summary: {state['project_summary'][:1000]}""",
         temperature=0.5,
         max_tokens=2048,
+        model=PLANNER_MODEL,
     )
 
     tracker.complete_step(

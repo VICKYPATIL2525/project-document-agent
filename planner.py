@@ -3,7 +3,7 @@ Document Planner - Analyzes user inputs and creates a structured document plan.
 Uses LLM to generate chapter outlines with page allocations.
 """
 import json
-from config import WORDS_PER_PAGE
+from config import WORDS_PER_PAGE, calculate_max_tokens, PLANNER_MODEL
 from llm_client import call_llm
 from tracker import ProcessTracker
 
@@ -119,22 +119,33 @@ Create the document plan. Remember: total pages must equal {target_pages}.
 """
 
     try:
+        # Plan JSON grows with chapter count: ~500 tokens per chapter + 1000 base
+        estimated_plan_words = (content_pages // 10) * 500 + 1000
+        dynamic_max_tokens = calculate_max_tokens(word_target=estimated_plan_words, buffer_multiplier=2.0)
+
         result = call_llm(
             system_prompt=PLANNER_SYSTEM_PROMPT,
             user_prompt=user_prompt,
             temperature=0.3,
-            max_tokens=4096,
+            max_tokens=dynamic_max_tokens,
+            model=PLANNER_MODEL,
         )
 
         # Parse the JSON response
         content = result["content"].strip()
-        # Remove code fences if present
-        if content.startswith("```"):
-            content = content.split("\n", 1)[1]
-        if content.endswith("```"):
-            content = content.rsplit("```", 1)[0]
-        if content.startswith("json"):
-            content = content[4:]
+
+        # Strip code fences robustly (handles ```json, ```JSON, ``` etc.)
+        if "```" in content:
+            import re
+            match = re.search(r"```(?:json)?\s*([\s\S]*?)```", content, re.IGNORECASE)
+            if match:
+                content = match.group(1).strip()
+
+        # Extract JSON object if there's surrounding text
+        import re
+        json_match = re.search(r"\{[\s\S]*\}", content)
+        if json_match:
+            content = json_match.group(0)
 
         plan = json.loads(content.strip())
 

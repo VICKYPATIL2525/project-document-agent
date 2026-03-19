@@ -7,11 +7,14 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# Azure OpenAI Settings
-AZURE_OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
-AZURE_OPENAI_ENDPOINT = os.getenv("AZURE_OPENAI_ENDPOINT", "")
-AZURE_OPENAI_VERSION = os.getenv("AZURE_OPENAI_VERSION", "2024-12-01-preview")
-AZURE_DEPLOYMENT_NAME = os.getenv("AZURE_DEPLOYMENT_NAME", "gpt-4.1-mini")
+# Anthropic Settings
+ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "")
+
+# Model tiers:
+# - PLANNER_MODEL   → complex reasoning (document plan, references)
+# - GENERATOR_MODEL → bulk text generation (chapters, front matter, calibration)
+PLANNER_MODEL   = os.getenv("ANTHROPIC_PLANNER_MODEL",   "claude-sonnet-4-6")
+GENERATOR_MODEL = os.getenv("ANTHROPIC_GENERATOR_MODEL", "claude-haiku-4-5-20251001")
 
 # Document Settings
 MAX_PAGES = 250
@@ -20,8 +23,22 @@ WORDS_PER_PAGE = 300  # Approximate words per A4 page with standard formatting
 LINES_PER_PAGE = 30
 
 # Token Limits
-MAX_OUTPUT_TOKENS_PER_CALL = 4096
+DEFAULT_MAX_OUTPUT_TOKENS = 4096       # Default for simple calls
+MAX_OUTPUT_TOKENS_PER_CALL = 8096      # Hard cap per call
 MAX_INPUT_TOKENS_PER_CALL = 128000
+
+
+def calculate_max_tokens(word_target: int = 0, buffer_multiplier: float = 1.5, default: int = DEFAULT_MAX_OUTPUT_TOKENS) -> int:
+    """
+    Dynamically calculate max_tokens based on word target.
+    - 1 token ≈ 0.75 words, so tokens_needed = word_target / 0.75 = word_target * 1.33
+    - Apply a buffer multiplier (default 1.5x) for safety
+    - Clamp between default and MAX_OUTPUT_TOKENS_PER_CALL
+    """
+    if word_target <= 0:
+        return default
+    tokens_needed = int(word_target * 1.33 * buffer_multiplier)
+    return max(default, min(tokens_needed, MAX_OUTPUT_TOKENS_PER_CALL))
 
 # Batch Settings
 BATCH_CONCURRENCY = 12  # Number of parallel LLM calls
