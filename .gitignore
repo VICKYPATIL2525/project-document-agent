@@ -25,6 +25,8 @@ wheels/
 
 # Virtual Environment
 myenv/
+# Claude folder
+.claude/
 
 # Environment variables
 .env
