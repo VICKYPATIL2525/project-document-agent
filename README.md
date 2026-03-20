@@ -449,7 +449,7 @@ def calculate_max_tokens(word_target: int = 0, buffer_multiplier: float = 1.5, d
 |--------|-------------|
 | `__init__(filename)` | Creates a new Word document, sets up custom styles and A4 page layout |
 | `_setup_page_layout()` | Configures A4 page size (8.27" × 11.69"), margins (1.25" left, 1.0" others) |
-| `_setup_styles()` | Defines Normal, Heading 1/2/3, and Code paragraph styles with fonts and sizes |
+| `_setup_styles()` | Defines Normal (justified), Heading 1/2/3, and Code paragraph styles with fonts and sizes |
 | `add_title_page(...)` | Adds formatted title page: college name, department, project title, student info, guide, year |
 | `add_certificate_page(...)` | Adds certificate with body text and signature table (Guide, HOD, External Examiner) |
 | `add_acknowledgment(content)` | Adds acknowledgment section with centered title |
@@ -478,7 +478,7 @@ This method processes LLM-generated markdown-like content line by line and conve
 | `1. item` | List Number style |
 | `**bold**` | Bold run |
 | `*italic*` | Italic run |
-| Regular text | Normal paragraph with 1.5 line spacing |
+| Regular text | Normal paragraph with 1.5 line spacing, justified alignment |
 
 **Diagram Placeholder Details:**
 - Created as a bordered single-cell table (5.5" wide)
@@ -710,6 +710,7 @@ The planner uses the more capable Sonnet model for structured reasoning (JSON pl
 | Headings | 16pt / 14pt / 12pt | Change `HEADING1_SIZE`, `HEADING2_SIZE`, `HEADING3_SIZE` |
 | Code | Consolas 10pt | Change `CODE_FONT`, `CODE_SIZE` |
 | Line Spacing | 1.5× | Change `LINE_SPACING` |
+| Body Text Alignment | Justified | Applied to Normal style and body paragraphs in `doc_formatter.py` |
 | Page Size | A4 (8.27" × 11.69") | Hardcoded in `doc_formatter.py` |
 | Margins | 1.25" left, 1.0" top/bottom/right | Left margin hardcoded, others via `PAGE_MARGIN_INCHES` |
 | Words/Page | 300 | Change `WORDS_PER_PAGE` — affects page allocation math |
@@ -881,7 +882,7 @@ During generation, you'll see timestamped logs like:
 | # | Section | Pages | Description |
 |---|---------|-------|-------------|
 | 1 | **Title Page** | 1 | College name (uppercase, 18pt bold), department, "A Project Report On", project title (18pt bold, blue), student name, roll number, guide name, academic year — all centered |
-| 2 | **Certificate** | 1 | Formal certification text, signature table with 3 columns: Project Guide, Head of Department, External Examiner |
+| 2 | **Certificate** | 1 | Formal certification text (justified), signature table with 3 columns: Project Guide, Head of Department, External Examiner |
 | 3 | **Acknowledgment** | 1 | LLM-generated formal acknowledgment (200–250 words) |
 | 4 | **Abstract** | 1–2 | LLM-generated abstract (250–300 words) covering background, problem, methodology, features, tech, conclusion |
 | 5 | **Table of Contents** | 1–2 | Word field code — right-click → "Update Field" in Microsoft Word to auto-populate |

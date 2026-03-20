@@ -59,6 +59,7 @@ class DocumentFormatter:
         paragraph_format = style.paragraph_format
         paragraph_format.line_spacing = LINE_SPACING
         paragraph_format.space_after = Pt(6)
+        paragraph_format.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
 
         # Heading 1
         h1 = self.doc.styles["Heading 1"]
@@ -235,6 +236,7 @@ class DocumentFormatter:
         )
         p = self.doc.add_paragraph(text)
         p.paragraph_format.line_spacing = LINE_SPACING
+        p.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
         for run in p.runs:
             run.font.size = Pt(BODY_SIZE)
             run.font.name = DEFAULT_FONT
@@ -479,9 +481,10 @@ class DocumentFormatter:
             i += 1
 
     def _add_formatted_text(self, text: str):
-        """Add a paragraph with basic formatting (bold, italic)."""
+        """Add a paragraph with basic formatting (bold, italic) and justified alignment."""
         p = self.doc.add_paragraph()
         p.paragraph_format.line_spacing = LINE_SPACING
+        p.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
 
         # Handle bold and italic inline
         parts = re.split(r"(\*\*.*?\*\*|\*.*?\*)", text)

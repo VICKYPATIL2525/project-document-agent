@@ -555,7 +555,7 @@ output/doc_20260212_232509.docx
   │  ├─ Chapter 1: Introduction (8 pages, 2400 words)
   │  │  ├─ Heading 1: "Chapter 1: Introduction"
   │  │  ├─ Heading 2: "1.1 Background"
-  │  │  │  └─ Body text (Times New Roman 12pt, 1.5 line spacing)
+  │  │  │  └─ Body text (Times New Roman 12pt, 1.5 line spacing, justified)
   │  │  ├─ Heading 2: "1.2 Problem Statement"
   │  │  │  └─ Body text
   │  │  ├─ Heading 2: "1.3 Objectives"
@@ -598,7 +598,7 @@ Page Numbers:
 
 Section Format:
   Margins:    1.25" left, 1.0" top/bottom/right
-  Font:       Times New Roman 12pt, body text
+  Font:       Times New Roman 12pt, body text (justified alignment)
   Headings:   Heading 1 (16pt), Heading 2 (14pt), Heading 3 (12pt)
   Spacing:    1.5× line spacing throughout
   Page Size:  A4 (8.27" × 11.69")
