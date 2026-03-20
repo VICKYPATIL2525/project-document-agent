@@ -328,30 +328,43 @@ def format_document_node(state: PipelineState) -> dict:
         # 5. Table of Contents
         doc.add_table_of_contents()
 
-        # 6. List of Figures
-        doc.add_list_of_figures()
+        # 6. List of Figures — only for documents with that in front matter
+        front_matter_types = [fm.get("type") for fm in (state.get("document_plan", {}).get("front_matter", []))]
+        if "list_of_figures" in front_matter_types:
+            doc.add_list_of_figures()
 
-        # 7. List of Tables
-        doc.add_list_of_tables()
+        # 7. List of Tables — only for documents with that in front matter
+        if "list_of_tables" in front_matter_types:
+            doc.add_list_of_tables()
 
         # 8. Chapters
-        for chapter in (state.get("chapters_content") or []):
+        all_chapters = state.get("chapters_content") or []
+        for i, chapter in enumerate(all_chapters):
             tracker.log(f"   Formatting Ch {chapter['chapter_number']}: {chapter['title']}")
             doc.add_chapter(
                 chapter_number=chapter["chapter_number"],
                 title=chapter["title"],
                 content=chapter["content"],
+                is_last=(i == len(all_chapters) - 1),
             )
 
         # 9. References
         doc.add_references(state.get("references_content", ""))
 
-        # 10. Appendix
-        appendix_code = state.get("project_code", "")
-        if appendix_code:
-            doc.add_appendix(f"## Source Code\n\n```\n{appendix_code[:10000]}\n```")
-        else:
-            doc.add_appendix()
+        # 10. Appendix — skip for small documents, limit code size
+        target_pages = state.get("target_pages", 50)
+        back_matter = state.get("document_plan", {}).get("back_matter", [])
+        has_appendix = any(bm.get("type") == "appendix" for bm in back_matter)
+
+        if has_appendix:
+            appendix_code = state.get("project_code", "")
+            if appendix_code:
+                # Limit code based on appendix page allocation
+                appendix_pages = next((bm["page_allocation"] for bm in back_matter if bm["type"] == "appendix"), 2)
+                max_code_chars = appendix_pages * 2000  # ~2000 chars per page for code
+                doc.add_appendix(f"## Source Code\n\n```\n{appendix_code[:max_code_chars]}\n```")
+            else:
+                doc.add_appendix()
 
         # Save
         tracker.log("   Saving .docx file...")

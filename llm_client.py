@@ -3,6 +3,7 @@ LLM Client - Handles all Anthropic Claude interactions.
 Provides sync and async methods with token tracking.
 """
 import asyncio
+import time
 import tiktoken
 from langchain_anthropic import ChatAnthropic
 from langchain_core.messages import HumanMessage, SystemMessage
@@ -13,6 +14,9 @@ from config import (
     DEFAULT_MAX_OUTPUT_TOKENS,
     MAX_OUTPUT_TOKENS_PER_CALL,
 )
+
+MAX_RETRIES = 3
+RETRY_BASE_DELAY = 5  # seconds
 
 
 def get_llm(temperature: float = 0.7, max_tokens: int = DEFAULT_MAX_OUTPUT_TOKENS, model: str = None) -> ChatAnthropic:
@@ -54,14 +58,23 @@ def call_llm(
     ]
 
     input_tokens = count_tokens(system_prompt + user_prompt)
-    response = llm.invoke(messages)
-    output_tokens = count_tokens(response.content)
 
-    return {
-        "content": response.content,
-        "input_tokens": input_tokens,
-        "output_tokens": output_tokens,
-    }
+    for attempt in range(MAX_RETRIES):
+        try:
+            response = llm.invoke(messages)
+            output_tokens = count_tokens(response.content)
+            return {
+                "content": response.content,
+                "input_tokens": input_tokens,
+                "output_tokens": output_tokens,
+            }
+        except Exception as e:
+            if ("overloaded" in str(e).lower() or "529" in str(e) or "rate" in str(e).lower()) and attempt < MAX_RETRIES - 1:
+                delay = RETRY_BASE_DELAY * (2 ** attempt)
+                print(f"[Retry {attempt + 1}/{MAX_RETRIES}] API overloaded, waiting {delay}s...")
+                time.sleep(delay)
+            else:
+                raise
 
 
 async def call_llm_async(
@@ -84,14 +97,23 @@ async def call_llm_async(
     ]
 
     input_tokens = count_tokens(system_prompt + user_prompt)
-    response = await llm.ainvoke(messages)
-    output_tokens = count_tokens(response.content)
 
-    return {
-        "content": response.content,
-        "input_tokens": input_tokens,
-        "output_tokens": output_tokens,
-    }
+    for attempt in range(MAX_RETRIES):
+        try:
+            response = await llm.ainvoke(messages)
+            output_tokens = count_tokens(response.content)
+            return {
+                "content": response.content,
+                "input_tokens": input_tokens,
+                "output_tokens": output_tokens,
+            }
+        except Exception as e:
+            if ("overloaded" in str(e).lower() or "529" in str(e) or "rate" in str(e).lower()) and attempt < MAX_RETRIES - 1:
+                delay = RETRY_BASE_DELAY * (2 ** attempt)
+                print(f"[Retry {attempt + 1}/{MAX_RETRIES}] API overloaded, waiting {delay}s...")
+                await asyncio.sleep(delay)
+            else:
+                raise
 
 
 async def batch_call_llm(

@@ -19,7 +19,7 @@ GENERATOR_MODEL = os.getenv("ANTHROPIC_GENERATOR_MODEL", "claude-haiku-4-5-20251
 # Document Settings
 MAX_PAGES = 250
 MIN_PAGES = 10
-WORDS_PER_PAGE = 300  # Approximate words per A4 page with standard formatting
+WORDS_PER_PAGE = 210  # Approximate words per A4 page with 1.5 spacing, headings, tables, diagrams
 LINES_PER_PAGE = 30
 
 # Token Limits

@@ -209,24 +209,42 @@ async def calibrate_content(
     """
     Check generated content against page targets and adjust if needed.
     Re-generates chapters that are significantly off target.
+    Also enforces total word budget across all chapters.
     """
     step_id = tracker.start_step(
         "content_calibration",
         "Checking content against page targets and adjusting",
     )
 
+    # Calculate total word budget from plan
+    total_target_words = sum(ch.get("word_target", 0) for ch in plan.get("chapters", []))
+    total_actual_words = sum(ch["word_count"] for ch in chapters)
+    total_deviation = (total_actual_words - total_target_words) / total_target_words if total_target_words > 0 else 0
+
+    tracker.log(f"   Total words: {total_actual_words} / {total_target_words} target ({total_deviation:+.0%})")
+
+    # If total content is way over budget, scale down all chapter targets proportionally
+    if total_deviation > 0.15:
+        # We need to shrink — recalculate targets so total matches budget
+        scale_factor = total_target_words / total_actual_words
+        tracker.log(f"   ⚠ Content {total_deviation:+.0%} over budget, scaling targets down (factor: {scale_factor:.2f})")
+        for chapter in chapters:
+            chapter["target_words"] = int(chapter["word_count"] * scale_factor)
+
     chapters_to_fix = []
     for idx, chapter in enumerate(chapters):
         target = chapter["target_words"]
         actual = chapter["word_count"]
-        deviation = abs(actual - target) / target if target > 0 else 0
+        deviation = (actual - target) / target if target > 0 else 0
 
         # If more than 20% off target, regenerate
-        if deviation > 0.20:
+        if abs(deviation) > 0.20:
             if actual < target:
                 instruction = f"EXPAND this content to exactly {target} words. Add more detail, examples, and explanations. Current word count: {actual}."
             else:
                 instruction = f"CONDENSE this content to exactly {target} words. Keep the most important points and remove redundancy. Current word count: {actual}."
+
+            tracker.log(f"   ⚠ Ch {chapter['chapter_number']}: {actual} words vs {target} target ({deviation:+.0%}) — will fix")
 
             chapters_to_fix.append({
                 "system_prompt": f"""You are an academic content editor. {instruction}
@@ -269,5 +287,9 @@ Return the adjusted content only.""",
         )
     else:
         tracker.complete_step(step_id, input_tokens=0, output_tokens=0, llm_calls=0)
+
+    # Final check
+    final_words = sum(ch["word_count"] for ch in chapters)
+    tracker.log(f"   Calibrated total: {final_words} words (target: {total_target_words})")
 
     return chapters

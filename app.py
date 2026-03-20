@@ -29,36 +29,36 @@ st.markdown("""
     @import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist+Mono:wght@300;400;500;600&family=Outfit:wght@200;300;400;500;600;700&display=swap');
 
     :root {
-        --bg-primary: #f6f1eb;
-        --bg-secondary: #ede7df;
-        --bg-tertiary: #e4ddd3;
-        --bg-card: #faf8f5;
-        --bg-inset: #f0ebe4;
-        --ink-primary: #1a1d2e;
-        --ink-secondary: #3d4055;
-        --ink-muted: #7d7f91;
-        --ink-faint: #a8a9b8;
-        --ink-ghost: #c8c9d4;
-        --accent-primary: #2d5a8a;
-        --accent-hover: #1e4570;
-        --accent-light: #d4e3f3;
-        --accent-wash: #eaf1f8;
-        --stamp-red: #c0392b;
-        --stamp-red-bg: rgba(192,57,43,0.06);
-        --stamp-green: #1e7a4a;
-        --stamp-green-bg: rgba(30,122,74,0.06);
-        --stamp-amber: #b37e2a;
-        --stamp-amber-bg: rgba(179,126,42,0.06);
-        --grid-line: rgba(45,90,138,0.06);
-        --border-light: rgba(26,29,46,0.08);
-        --border-medium: rgba(26,29,46,0.13);
-        --border-strong: rgba(26,29,46,0.22);
-        --shadow-sm: 0 1px 3px rgba(26,29,46,0.05), 0 1px 2px rgba(26,29,46,0.03);
-        --shadow-md: 0 4px 12px rgba(26,29,46,0.06), 0 2px 4px rgba(26,29,46,0.04);
-        --shadow-lg: 0 12px 36px rgba(26,29,46,0.08), 0 4px 12px rgba(26,29,46,0.04);
-        --radius-sm: 3px;
-        --radius-md: 6px;
-        --radius-lg: 10px;
+        --bg-primary: #f8f9fb;
+        --bg-secondary: #eef0f4;
+        --bg-tertiary: #e2e5eb;
+        --bg-card: #ffffff;
+        --bg-inset: #f1f3f7;
+        --ink-primary: #111827;
+        --ink-secondary: #374151;
+        --ink-muted: #5b6578;
+        --ink-faint: #8290a4;
+        --ink-ghost: #9ca3af;
+        --accent-primary: #1d4ed8;
+        --accent-hover: #1e40af;
+        --accent-light: #bfdbfe;
+        --accent-wash: #eff6ff;
+        --stamp-red: #b91c1c;
+        --stamp-red-bg: rgba(185,28,28,0.07);
+        --stamp-green: #15803d;
+        --stamp-green-bg: rgba(21,128,61,0.07);
+        --stamp-amber: #a16207;
+        --stamp-amber-bg: rgba(161,98,7,0.07);
+        --grid-line: rgba(29,78,216,0.04);
+        --border-light: #e5e7eb;
+        --border-medium: #d1d5db;
+        --border-strong: #9ca3af;
+        --shadow-sm: 0 1px 2px rgba(0,0,0,0.04), 0 1px 3px rgba(0,0,0,0.06);
+        --shadow-md: 0 4px 6px rgba(0,0,0,0.04), 0 2px 4px rgba(0,0,0,0.06);
+        --shadow-lg: 0 10px 25px rgba(0,0,0,0.06), 0 4px 10px rgba(0,0,0,0.04);
+        --radius-sm: 4px;
+        --radius-md: 8px;
+        --radius-lg: 12px;
     }
 
     /* ── Global ── */
@@ -72,7 +72,7 @@ st.markdown("""
         background-image:
             linear-gradient(var(--grid-line) 1px, transparent 1px),
             linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
-        background-size: 28px 28px;
+        background-size: 32px 32px;
         color: var(--ink-primary);
     }
 
@@ -83,8 +83,8 @@ st.markdown("""
     /* ── Sidebar ── */
     [data-testid="stSidebar"] {
         background: var(--bg-card) !important;
-        border-right: 2px solid var(--border-medium) !important;
-        box-shadow: 4px 0 20px rgba(26,29,46,0.04) !important;
+        border-right: 1px solid var(--border-medium) !important;
+        box-shadow: 2px 0 12px rgba(0,0,0,0.03) !important;
     }
     [data-testid="stSidebar"] * {
         color: var(--ink-secondary) !important;
@@ -95,7 +95,7 @@ st.markdown("""
         font-family: 'Instrument Serif', serif !important;
     }
     [data-testid="stSidebar"] .stMarkdown p {
-        font-size: 0.82rem;
+        font-size: 0.84rem;
         line-height: 1.7;
     }
 
@@ -105,7 +105,7 @@ st.markdown("""
         padding: 3rem 2.8rem 2.5rem;
         margin-bottom: 2rem;
         background: var(--bg-card);
-        border: 2px solid var(--border-medium);
+        border: 1px solid var(--border-medium);
         border-radius: var(--radius-md);
         box-shadow: var(--shadow-md);
         overflow: hidden;
@@ -159,7 +159,7 @@ st.markdown("""
         font-family: 'Outfit', sans-serif;
         font-size: 0.92rem;
         color: var(--ink-muted);
-        font-weight: 300;
+        font-weight: 400;
         max-width: 580px;
         line-height: 1.65;
     }
@@ -170,7 +170,7 @@ st.markdown("""
         margin-top: 1.5rem;
         padding: 0.4rem 0.85rem;
         background: var(--bg-inset);
-        border: 1.5px solid var(--border-medium);
+        border: 1px solid var(--border-medium);
         border-radius: 2px;
         font-family: 'Geist Mono', monospace;
         font-size: 0.6rem;
@@ -191,7 +191,7 @@ st.markdown("""
     /* ── Section Labels ── */
     .section-label {
         font-family: 'Geist Mono', monospace;
-        font-size: 0.58rem;
+        font-size: 0.6rem;
         letter-spacing: 0.2em;
         color: var(--accent-primary);
         text-transform: uppercase;
@@ -214,7 +214,7 @@ st.markdown("""
     /* ── Card Containers ── */
     .card {
         background: var(--bg-card);
-        border: 1.5px solid var(--border-medium);
+        border: 1px solid var(--border-medium);
         border-radius: var(--radius-md);
         padding: 1.5rem;
         margin-bottom: 1rem;
@@ -224,7 +224,7 @@ st.markdown("""
     .card::before {
         content: '';
         position: absolute;
-        top: -1.5px; left: 16px; right: 16px;
+        top: -1px; left: 16px; right: 16px;
         height: 3px;
         background: var(--accent-primary);
         border-radius: 0 0 2px 2px;
@@ -258,11 +258,11 @@ st.markdown("""
     .stTextInput input:focus,
     .stTextArea textarea:focus {
         border-color: var(--accent-primary) !important;
-        box-shadow: 0 0 0 3px rgba(45,90,138,0.1) !important;
+        box-shadow: 0 0 0 3px rgba(29,78,216,0.12) !important;
     }
     .stTextInput input::placeholder,
     .stTextArea textarea::placeholder {
-        color: var(--ink-ghost) !important;
+        color: var(--ink-faint) !important;
         font-weight: 300 !important;
     }
     .stTextInput label,
@@ -271,7 +271,7 @@ st.markdown("""
     .stRadio label,
     .stFileUploader label {
         color: var(--ink-secondary) !important;
-        font-size: 0.8rem !important;
+        font-size: 0.82rem !important;
         font-weight: 500 !important;
         letter-spacing: 0.02em !important;
         font-family: 'Outfit', sans-serif !important;
@@ -316,7 +316,7 @@ st.markdown("""
         border-bottom: 2.5px solid var(--accent-primary) !important;
     }
     .stTabs [data-baseweb="tab"]:hover {
-        color: var(--ink-secondary) !important;
+        color: var(--ink-primary) !important;
     }
     .stTabs [data-baseweb="tab-panel"] {
         padding-top: 1.5rem !important;
@@ -335,14 +335,14 @@ st.markdown("""
         letter-spacing: 0.03em !important;
         padding: 0.7rem 1.6rem !important;
         transition: all 0.2s ease !important;
-        box-shadow: 0 2px 8px rgba(45,90,138,0.2), inset 0 1px 0 rgba(255,255,255,0.1) !important;
+        box-shadow: 0 2px 8px rgba(29,78,216,0.25), inset 0 1px 0 rgba(255,255,255,0.15) !important;
         position: relative !important;
         overflow: hidden !important;
     }
     .stButton > button:hover {
         background: var(--accent-hover) !important;
         transform: translateY(-1px) !important;
-        box-shadow: 0 4px 16px rgba(45,90,138,0.25), inset 0 1px 0 rgba(255,255,255,0.1) !important;
+        box-shadow: 0 4px 16px rgba(29,78,216,0.3), inset 0 1px 0 rgba(255,255,255,0.15) !important;
     }
     .stButton > button:active {
         transform: translateY(0) !important;
@@ -370,13 +370,13 @@ st.markdown("""
         font-size: 1rem !important;
         letter-spacing: 0.03em !important;
         padding: 0.85rem 2rem !important;
-        box-shadow: 0 4px 16px rgba(45,90,138,0.2), inset 0 1px 0 rgba(255,255,255,0.1) !important;
+        box-shadow: 0 4px 16px rgba(29,78,216,0.25), inset 0 1px 0 rgba(255,255,255,0.15) !important;
         transition: all 0.2s ease !important;
     }
     .stDownloadButton > button:hover {
         background: var(--accent-hover) !important;
         transform: translateY(-2px) !important;
-        box-shadow: 0 8px 28px rgba(45,90,138,0.25) !important;
+        box-shadow: 0 8px 28px rgba(29,78,216,0.3) !important;
     }
 
     /* ── Toggle ── */
@@ -393,7 +393,7 @@ st.markdown("""
     /* ── Metrics ── */
     [data-testid="metric-container"] {
         background: var(--bg-card) !important;
-        border: 1.5px solid var(--border-medium) !important;
+        border: 1px solid var(--border-medium) !important;
         border-radius: var(--radius-md) !important;
         padding: 1.1rem !important;
         box-shadow: var(--shadow-sm) !important;
@@ -410,7 +410,7 @@ st.markdown("""
     [data-testid="metric-container"] label {
         color: var(--ink-muted) !important;
         font-family: 'Geist Mono', monospace !important;
-        font-size: 0.6rem !important;
+        font-size: 0.62rem !important;
         letter-spacing: 0.12em !important;
         text-transform: uppercase !important;
     }
@@ -423,19 +423,19 @@ st.markdown("""
 
     /* ── Progress Bar ── */
     .stProgress > div > div > div {
-        background: linear-gradient(90deg, var(--accent-primary) 0%, #4a8bc2 100%) !important;
-        border-radius: 2px !important;
+        background: linear-gradient(90deg, var(--accent-primary) 0%, #3b82f6 100%) !important;
+        border-radius: 3px !important;
     }
     .stProgress > div > div {
         background: var(--bg-tertiary) !important;
-        border-radius: 2px !important;
-        height: 5px !important;
+        border-radius: 3px !important;
+        height: 6px !important;
     }
 
     /* ── Code Block ── */
     .stCode, [data-testid="stCode"] {
-        background: var(--ink-primary) !important;
-        border: 1.5px solid var(--border-strong) !important;
+        background: #1e293b !important;
+        border: 1px solid var(--border-strong) !important;
         border-radius: var(--radius-sm) !important;
         font-family: 'Geist Mono', monospace !important;
         font-size: 0.73rem !important;
@@ -444,10 +444,10 @@ st.markdown("""
     /* ── Expander ── */
     .streamlit-expanderHeader {
         background: var(--bg-card) !important;
-        border: 1.5px solid var(--border-medium) !important;
+        border: 1px solid var(--border-medium) !important;
         border-radius: var(--radius-sm) !important;
         color: var(--ink-secondary) !important;
-        font-size: 0.82rem !important;
+        font-size: 0.84rem !important;
         font-family: 'Outfit', sans-serif !important;
         font-weight: 500 !important;
     }
@@ -457,20 +457,20 @@ st.markdown("""
     }
     .streamlit-expanderContent {
         background: var(--bg-card) !important;
-        border: 1.5px solid var(--border-medium) !important;
+        border: 1px solid var(--border-medium) !important;
         border-top: none !important;
     }
 
     /* ── Alert / Success / Error ── */
     .stSuccess {
         background: var(--stamp-green-bg) !important;
-        border: 1.5px solid rgba(30,122,74,0.2) !important;
+        border: 1.5px solid rgba(21,128,61,0.25) !important;
         border-radius: var(--radius-sm) !important;
         color: var(--stamp-green) !important;
     }
     .stError {
         background: var(--stamp-red-bg) !important;
-        border: 1.5px solid rgba(192,57,43,0.2) !important;
+        border: 1.5px solid rgba(185,28,28,0.25) !important;
         border-radius: var(--radius-sm) !important;
         color: var(--stamp-red) !important;
     }
@@ -482,14 +482,14 @@ st.markdown("""
     }
     .stWarning {
         background: var(--stamp-amber-bg) !important;
-        border: 1.5px solid rgba(179,126,42,0.2) !important;
+        border: 1.5px solid rgba(161,98,7,0.25) !important;
         color: var(--stamp-amber) !important;
     }
 
     /* ── Divider ── */
     hr {
         border: none !important;
-        border-top: 1.5px solid var(--border-light) !important;
+        border-top: 1px solid var(--border-light) !important;
         margin: 1.5rem 0 !important;
     }
 
@@ -502,7 +502,7 @@ st.markdown("""
     .stat-box {
         flex: 1;
         background: var(--bg-card);
-        border: 1.5px solid var(--border-medium);
+        border: 1px solid var(--border-medium);
         border-radius: var(--radius-md);
         padding: 1rem;
         text-align: center;
@@ -519,7 +519,7 @@ st.markdown("""
     }
     .stat-label {
         font-family: 'Geist Mono', monospace;
-        font-size: 0.58rem;
+        font-size: 0.6rem;
         color: var(--ink-muted);
         letter-spacing: 0.14em;
         text-transform: uppercase;
@@ -539,26 +539,26 @@ st.markdown("""
         padding: 0.65rem 0.9rem;
         border-radius: var(--radius-sm);
         margin: 0.3rem 0;
-        font-size: 0.8rem;
+        font-size: 0.82rem;
         font-family: 'Outfit', sans-serif;
     }
     .step-completed {
         background: var(--stamp-green-bg);
-        border: 1.5px solid rgba(30,122,74,0.15);
+        border: 1px solid rgba(21,128,61,0.2);
         color: var(--stamp-green);
     }
     .step-failed {
         background: var(--stamp-red-bg);
-        border: 1.5px solid rgba(192,57,43,0.15);
+        border: 1px solid rgba(185,28,28,0.2);
         color: var(--stamp-red);
     }
     .step-running {
         background: var(--accent-wash);
-        border: 1.5px solid var(--accent-light);
+        border: 1px solid var(--accent-light);
         color: var(--accent-primary);
     }
     .step-icon {
-        font-size: 0.8rem;
+        font-size: 0.82rem;
         min-width: 18px;
         font-weight: 600;
     }
@@ -568,13 +568,13 @@ st.markdown("""
     }
     .step-meta {
         font-family: 'Geist Mono', monospace;
-        font-size: 0.62rem;
-        opacity: 0.65;
+        font-size: 0.64rem;
+        opacity: 0.7;
     }
 
     .success-banner {
         background: var(--bg-card);
-        border: 2px solid rgba(30,122,74,0.25);
+        border: 1.5px solid rgba(21,128,61,0.3);
         border-radius: var(--radius-md);
         padding: 2rem 2rem 1.5rem;
         margin-bottom: 1.5rem;
@@ -587,7 +587,7 @@ st.markdown("""
         position: absolute;
         top: 0; left: 0; right: 0;
         height: 4px;
-        background: linear-gradient(90deg, var(--stamp-green) 0%, #2ecc71 100%);
+        background: linear-gradient(90deg, var(--stamp-green) 0%, #22c55e 100%);
     }
     .success-banner::after {
         content: 'COMPLETE';
@@ -597,8 +597,8 @@ st.markdown("""
         font-size: 0.5rem;
         letter-spacing: 0.3em;
         color: var(--stamp-green);
-        opacity: 0.5;
-        border: 1px solid rgba(30,122,74,0.2);
+        opacity: 0.6;
+        border: 1px solid rgba(21,128,61,0.25);
         padding: 0.15rem 0.5rem;
         border-radius: 1px;
     }
@@ -610,13 +610,13 @@ st.markdown("""
         margin-bottom: 0.3rem;
     }
     .success-banner-sub {
-        font-size: 0.82rem;
+        font-size: 0.84rem;
         color: var(--ink-muted);
     }
 
     .progress-wrap {
         background: var(--bg-card);
-        border: 1.5px solid var(--border-medium);
+        border: 1px solid var(--border-medium);
         border-radius: var(--radius-md);
         padding: 2rem;
         margin-bottom: 1.5rem;
@@ -629,7 +629,7 @@ st.markdown("""
         position: absolute;
         top: 0; left: 0; right: 0;
         height: 3px;
-        background: linear-gradient(90deg, var(--accent-primary), #6da1d4, var(--accent-primary));
+        background: linear-gradient(90deg, var(--accent-primary), #3b82f6, var(--accent-primary));
         background-size: 200% 100%;
         animation: shimmer 2s linear infinite;
     }
@@ -652,7 +652,7 @@ st.markdown("""
 
     .console-header {
         font-family: 'Geist Mono', monospace;
-        font-size: 0.62rem;
+        font-size: 0.64rem;
         letter-spacing: 0.14em;
         color: var(--ink-muted);
         text-transform: uppercase;
@@ -674,7 +674,7 @@ st.markdown("""
         gap: 0.5rem;
         padding: 0.4rem 0.6rem;
         border-radius: var(--radius-sm);
-        font-size: 0.72rem;
+        font-size: 0.74rem;
         font-family: 'Geist Mono', monospace;
         color: var(--ink-muted) !important;
         border: 1px solid transparent;
@@ -683,7 +683,7 @@ st.markdown("""
     }
     .prev-job-item:hover {
         background: var(--bg-inset);
-        color: var(--ink-secondary) !important;
+        color: var(--ink-primary) !important;
         border-color: var(--border-light);
     }
     .job-dot { width: 6px; height: 6px; border-radius: 50%; }
@@ -695,17 +695,18 @@ st.markdown("""
         display: flex;
         align-items: center;
         gap: 0.55rem;
-        padding: 0.35rem 0;
-        font-size: 0.78rem;
-        color: var(--ink-muted) !important;
+        padding: 0.4rem 0;
+        font-size: 0.8rem;
+        color: var(--ink-secondary) !important;
         border-bottom: 1px dashed var(--border-light);
     }
     .capability-item:last-child { border-bottom: none; }
     .cap-check {
         color: var(--accent-primary);
-        font-size: 0.55rem;
+        font-size: 0.58rem;
         min-width: 14px;
         font-family: 'Geist Mono', monospace;
+        font-weight: 600;
     }
 
     .how-step {
@@ -725,8 +726,8 @@ st.markdown("""
         font-style: italic;
     }
     .how-text {
-        font-size: 0.77rem;
-        color: var(--ink-muted) !important;
+        font-size: 0.8rem;
+        color: var(--ink-secondary) !important;
         line-height: 1.5;
     }
 
@@ -749,9 +750,9 @@ st.markdown("""
     /* ── Sidebar Section Headers ── */
     .sidebar-section-title {
         font-family: 'Geist Mono', monospace;
-        font-size: 0.56rem;
+        font-size: 0.58rem;
         letter-spacing: 0.2em;
-        color: var(--ink-ghost);
+        color: var(--ink-muted);
         text-transform: uppercase;
         margin-bottom: 0.75rem;
         padding-bottom: 0.35rem;
@@ -775,8 +776,8 @@ st.markdown("""
     }
     .sidebar-brand-version {
         font-family: 'Geist Mono', monospace;
-        font-size: 0.53rem;
-        color: var(--ink-ghost);
+        font-size: 0.55rem;
+        color: var(--ink-faint);
         letter-spacing: 0.18em;
         text-transform: uppercase;
         margin-top: 0.15rem;
@@ -794,8 +795,8 @@ st.markdown("""
     }
     .sidebar-footer-text {
         font-family: 'Geist Mono', monospace;
-        font-size: 0.53rem;
-        color: var(--ink-ghost);
+        font-size: 0.55rem;
+        color: var(--ink-faint);
         line-height: 1.7;
         letter-spacing: 0.05em;
     }
@@ -1274,9 +1275,8 @@ else:
                             unsafe_allow_html=True,
                         )
 
-                    st.markdown("<div style='height:0.5rem'></div>", unsafe_allow_html=True)
-                    with st.expander("Raw Tracking JSON", expanded=False):
-                        st.json(tracking_data)
+                with st.expander("Raw Tracking JSON", expanded=False):
+                    st.json(tracking_data)
 
             logs = result.get("logs", [])
             if logs:

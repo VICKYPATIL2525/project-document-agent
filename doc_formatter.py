@@ -374,7 +374,7 @@ class DocumentFormatter:
 
         self.doc.add_page_break()
 
-    def add_chapter(self, chapter_number: int, title: str, content: str):
+    def add_chapter(self, chapter_number: int, title: str, content: str, is_last: bool = False):
         """
         Add a complete chapter with parsed content.
         Handles headings, code blocks, diagrams, tables, and body text.
@@ -389,7 +389,8 @@ class DocumentFormatter:
         # Parse and add content
         self._parse_and_add_content(content, chapter_number)
 
-        self.doc.add_page_break()
+        if not is_last:
+            self.doc.add_page_break()
 
     def _parse_and_add_content(self, content: str, chapter_number: int):
         """Parse markdown-like content and add to document with formatting."""
